@@ -1,4 +1,4 @@
-# AI Nutrition Detection App
+# NutriLens AI
 
 (AI-Based Food Nutrition Estimator)
 
@@ -10,9 +10,8 @@ This project is an AI-based application that estimates food calories and nutrien
 
 ## Features
 - Image-based food analysis
-- Accurate nutrient estimation using Groq AI (Llama 4 Vision)
+- Accurate nutrient estimation 
 - Simple and interactive interface
-- Blazing fast performance
 
 ## 🛠️ Tech Stack
 - Python
