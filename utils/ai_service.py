@@ -1,6 +1,7 @@
 import os
 import json
 import base64
+import hashlib
 from dotenv import load_dotenv
 from groq import Groq
 
@@ -13,6 +14,9 @@ def configure_ai():
         return None
     
     return Groq(api_key=api_key)
+
+# In-memory cache for identical images
+_IMAGE_CACHE = {}
 
 def analyze_food_image(image_path, food_hint=None):
     """
@@ -28,39 +32,57 @@ def analyze_food_image(image_path, food_hint=None):
     try:
         # Encode the image
         with open(image_path, "rb") as image_file:
-            base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+            image_bytes = image_file.read()
+            base64_image = base64.b64encode(image_bytes).decode('utf-8')
+            
+        # Check cache for exact same image
+        cache_key = hashlib.md5(image_bytes).hexdigest()
+        if food_hint:
+            cache_key += f"_{food_hint}"
+            
+        if cache_key in _IMAGE_CACHE:
+            print("🤖 AI Service: Returning exactly identical cached result for the same image")
+            return _IMAGE_CACHE[cache_key]
         
         hint_instruction = f"IMPORTANT: The user has identified this context/food as: '{food_hint}'. Trust this hint to explicitly identify the primary food, then deduce calories and macros accurately." if food_hint else "Carefully distinguish between visually similar Indian dishes (e.g., Rice, Poha, Upma) based strictly on texture."
         
-        prompt = (
-            "You are an Elite Indian Culinary Expert AI. Your task is to identify food items in images with 100% accuracy.\n"
-            "Analyze this image carefully. Indian food can be visually ambiguous, so look for subtle clues:\n"
-            "- Texture: Is it a dry sabzi, a wet gravy, a fried snack, or sprouted granules?\n"
-            "- Context: What is it served with? (e.g., Chana/Dal usually pairs with Roti/Rice; Puffs/Samosas are standalone).\n"
-            "- Regional hints: Identify if it is North Indian, South Indian, Street Food, or Bakery.\n"
-            "- Portion Size/Scale: Look at the size of the food relative to the plate, bowl, or hand in the image. Estimate the exact quantity in standard Indian measurements (e.g., '150g', '2 pieces', '1 medium katori/bowl', '200g').\n\n"
-            "First, internally think about the visual features and deduce the exact authentic Indian culinary name. Do not assume generic Western dishes (e.g. NEVER say Empanada, Flatbread, or Bean Salad).\n\n"
+        system_prompt = (
+            "You are an Elite Dietitian and Culinary Expert. Analyze the food in this image with high precision.\n"
             f"{hint_instruction}\n"
-            "After deducing the items, estimate the portion size and provide the specific nutritional information (calories, protein, fat, carbs) for each.\n\n"
-            "You MUST output your final answer as a valid JSON array wrapped in ```json ... ```.\n"
-            "[\n"
-            "    {\n"
-            '        "name": "Exact Authentic Indian Name (e.g. Masoor Dal, Moong Sprouts, Veg Puff, Roti)",\n'
-            '        "quantity": "estimated quantity (e.g. 1 cup, 100g)",\n'
-            '        "calories": 100,\n'
-            '        "protein": 10,\n'
-            '        "fat": 5,\n'
-            '        "carbs": 20\n'
-            "    }\n"
-            "]\n"
+            "CRITICAL RULES FOR ACCURACY:\n"
+            "1. IDENTIFICATION: Identify exact authentic names (e.g., 'Roti' instead of 'Flatbread').\n"
+            "2. PORTION SIZING: Be extremely realistic about portion sizes based on the visual scale relative to the plate. DO NOT overestimate.\n"
+            "   - A standard Roti/Chapati is ~30g-40g.\n"
+            "   - Small side portions (like sprouts, chana, or dal on a plate) are usually 50g-80g max.\n"
+            "3. NUTRITIONAL ACCURACY: Calories and macros MUST strictly match standard nutritional databases for the estimated quantity.\n"
+            "   - E.g., 1 medium Roti (40g) is ~110-120 kcal. Do not inflate this.\n"
+            "   - Ensure macronutrient math is logical (Protein*4 + Carbs*4 + Fat*9 ≈ Calories).\n\n"
+            "You MUST reply in pure JSON format strictly matching this schema:\n"
+            "{\n"
+            '    "items": [\n'
+            "        {\n"
+            '            "name": "Exact Food Name",\n'
+            '            "reasoning": "Step-by-step reasoning for portion size and macros based on visual evidence.",\n'
+            '            "quantity": "Estimated quantity (e.g. 1 medium (40g), 1/2 katori (70g))",\n'
+            '            "calories": 110,\n'
+            '            "protein": 3.5,\n'
+            '            "fat": 1.0,\n'
+            '            "carbs": 22.0\n'
+            "        }\n"
+            "    ]\n"
+            "}"
         )
         
         chat_completion = client.chat.completions.create(
             messages=[
                 {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": prompt},
+                        {"type": "text", "text": "Analyze the food in this image."},
                         {
                             "type": "image_url",
                             "image_url": {
@@ -71,24 +93,24 @@ def analyze_food_image(image_path, food_hint=None):
                 }
             ],
             model="meta-llama/llama-4-scout-17b-16e-instruct",
-            temperature=0.0
+            response_format={"type": "json_object"},
+            temperature=0.0,
+            seed=42
         )
         
         # Clean up response text
         text = chat_completion.choices[0].message.content.strip()
-        print(f"🤖 AI Raw Response: {text}")
+        print(f"🤖 AI Raw Response Length: {len(text)} chars")
         
-        # Extract JSON array using regex
-        import re
-        match = re.search(r'\[\s*\{.*?\}\s*\]', text, re.DOTALL)
-        if match:
-            json_str = match.group(0)
-            results = json.loads(json_str)
+        # Extract JSON
+        try:
+            parsed_json = json.loads(text)
+            results = parsed_json.get("items", [])
+            # Save to cache
+            _IMAGE_CACHE[cache_key] = results
             return results
-        elif "[]" in text:
-            return []
-        else:
-            print("❌ AI did not return a valid JSON array")
+        except Exception as e:
+            print(f"❌ AI did not return a valid JSON object: {e}")
             return None
         
     except Exception as e:

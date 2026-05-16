@@ -4,122 +4,158 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nutrition Results - AI Analysis</title>
+    <title>Nutrition Results - NutriLens</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
-    <div class="container">
-        <header class="result-header">
-            <h1>📊 Nutrition Analysis Results</h1>
-            <a href="/" class="back-btn">← Analyze Another Image</a>
+    <div class="container" style="max-width: 1000px;">
+        <header class="results-header">
+            <h1 class="results-title">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                    stroke="currentColor" style="width: 28px; height: 28px; color: var(--brand-blue);">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 107.5 7.5h-7.5V6z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0013.5 3v7.5z" />
+                </svg>
+                Analysis Results
+            </h1>
+            <a href="/" class="btn-outline" style="text-decoration: none;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                </svg>
+                Scan Another
+            </a>
         </header>
 
         {% if results %}
-        <div class="results-container">
-            <div class="image-section">
-                <!-- <h3>📸 Your Food Image</h3> -->
-                <div style="font-weight: bold; margin-bottom: 10px; color: #555; font-size: 0.95em;">📸 Your Food Image</div>
-                <div class="image-container">
-                    <img src="{{ url_for('static', filename='uploads/' + image_url) }}" alt="Analyzed food" style="border-radius: 8px;">
+        <div class="results-grid">
+            <!-- Left Column: Image -->
+            <div class="image-panel">
+                <h3>Analyzed Image</h3>
+                <img src="{{ url_for('static', filename='uploads/' + image_url) }}" alt="Analyzed food">
+
+                <div
+                    style="margin-top: 24px; padding: 16px; background: var(--bg-color); border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px;">
+                    <div
+                        style="width: 32px; height: 32px; background: var(--brand-light); color: var(--brand-blue); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor" style="width: 16px; height: 16px;">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p
+                            style="font-size: 0.75rem; color: var(--text-tertiary); font-weight: 600; text-transform: uppercase;">
+                            Processing Time</p>
+                        <p style="font-size: 0.875rem; font-weight: 500; color: var(--text-primary);">{{ processing_time
+                            }} seconds</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="nutrition-section">
-                <!-- AI Analysis Info -->
-                <div class="ai-info">
-                    <div class="info-card" style="background: #eaf3ff; padding: 12px 18px; border-radius: 6px; margin-bottom: 20px;">
-                        <h4 style="margin: 0 0 5px 0; color: #1565c0; font-size: 0.95em;">🤖 AI Analysis</h4>
-                        <p style="margin: 0; color: #555; font-size: 0.85em;">⏱️ Processing Time: {{ processing_time }} seconds</p>
-                    </div>
-                </div>
-
-                <!-- Nutrition Summary -->
+            <!-- Right Column: Data -->
+            <div class="data-panel">
                 <div class="summary-card">
-                    <div style="font-weight: bold; margin-bottom: 10px; color: #555; font-size: 0.95em;">📊 Nutrition Summary</div>
-                    <div class="total-nutrition">
-                        <div class="nutrition-card main-card">
-                            <h4>🔥 Total Calories</h4>
-                            <span class="value calorie-value">{{ total_calories }} kcal</span>
+                    <h3>Nutrition Summary</h3>
+
+                    <div class="calories-hero">
+                        <span class="value">{{ total_calories }}</span>
+                        <span class="unit">kcal</span>
+                    </div>
+
+                    <div class="macros-grid">
+                        <div class="macro-box">
+                            <span class="label">
+                                <span
+                                    style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #EF4444;"></span>
+                                Protein
+                            </span>
+                            <span class="value">{{ total_protein }}g</span>
                         </div>
-                        <div class="nutrition-grid">
-                            <div class="nutrition-card">
-                                <h4>💪 Protein</h4>
-                                <span class="value">{{ total_protein }}g</span>
-                            </div>
-                            <div class="nutrition-card">
-                                <h4>🥑 Fat</h4>
-                                <span class="value">{{ total_fat }}g</span>
-                            </div>
-                            <div class="nutrition-card">
-                                <h4>🍚 Carbs</h4>
-                                <span class="value">{{ total_carbs }}g</span>
-                            </div>
+                        <div class="macro-box">
+                            <span class="label">
+                                <span
+                                    style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #F59E0B;"></span>
+                                Fat
+                            </span>
+                            <span class="value">{{ total_fat }}g</span>
+                        </div>
+                        <div class="macro-box">
+                            <span class="label">
+                                <span
+                                    style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10B981;"></span>
+                                Carbs
+                            </span>
+                            <span class="value">{{ total_carbs }}g</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- Detected Food Items Section -->
-                <div class="food-items-card" style="margin-top: 25px;">
-                    <div style="font-weight: bold; margin-bottom: 10px; color: #555; font-size: 0.95em;">🍽️ Detected Items</div>
-                    <div class="food-list">
+                <div class="items-card">
+                    <h3>Detected Items Breakdown</h3>
+                    <div class="items-list">
                         {% for item in results %}
-                        <div class="food-item" style="border: 1px solid #ebebeb; border-radius: 6px; padding: 12px 15px; margin-bottom: 10px; background: #fff;">
-                            <div class="food-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <span class="food-name" style="font-weight: 600; color: #333; font-size: 0.95em;">{{ item.food_name }}</span>
-                                <span class="food-qty" style="color: #666; font-size: 0.85em;">{{ item.quantity }}</span>
+                        <div class="item-row">
+                            <div class="item-info">
+                                <h4>{{ item.food_name }}</h4>
+                                <span>{{ item.quantity }}</span>
                             </div>
-                            <div class="food-macros" style="display: flex; gap: 12px; font-size: 0.8em; color: #777;">
-                                <span>Cal: {{ item.calories }}</span>
-                                <span>P: {{ item.protein }}g</span>
-                                <span>F: {{ item.fat }}g</span>
-                                <span>C: {{ item.carbs }}g</span>
+                            <div class="item-macros">
+                                <div class="item-macro-mini">
+                                    <span class="mlabel">Cal</span>
+                                    <span class="mval">{{ item.calories }}</span>
+                                </div>
+                                <div class="item-macro-mini">
+                                    <span class="mlabel">Pro</span>
+                                    <span class="mval">{{ item.protein }}g</span>
+                                </div>
+                                <div class="item-macro-mini">
+                                    <span class="mlabel">Fat</span>
+                                    <span class="mval">{{ item.fat }}g</span>
+                                </div>
+                                <div class="item-macro-mini">
+                                    <span class="mlabel">Carb</span>
+                                    <span class="mval">{{ item.carbs }}g</span>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
                     </div>
                 </div>
 
+                <div class="results-actions">
+                    <button onclick="window.print()" class="btn-outline">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0v-2.941c0-1.145.83-2.11 1.966-2.261a49.25 49.25 0 018.568 0c1.136.151 1.966 1.115 1.966 2.261v2.941z" />
+                        </svg>
+                        Print Report
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="action-buttons">
-            <a href="/" class="btn primary">🔄 Analyze Another</a>
-            <button onclick="window.print()" class="btn secondary">🖨️ Print Results</button>
-        </div>
-
         {% else %}
-        <div class="error-section">
-            <h3>❌ No Results Found</h3>
-            <p>We couldn't analyze the image. Please try again with a clearer food image.</p>
-            <a href="/" class="btn primary">🔄 Try Again</a>
+        <div class="summary-card" style="text-align: center; padding: 64px 24px;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor"
+                style="width: 48px; height: 48px; color: var(--error-color); margin: 0 auto 16px;">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <h3
+                style="color: var(--text-primary); font-size: 1.25rem; font-weight: 600; text-transform: none; margin-bottom: 8px;">
+                No Results Found</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 24px;">We couldn't accurately analyze the food in
+                this image. Please ensure the image is clear and well-lit.</p>
+            <a href="/" class="btn-primary" style="display: inline-flex; width: auto; text-decoration: none;">Try Again
+                with a New Image</a>
         </div>
         {% endif %}
     </div>
-
-    <style>
-        /* Additional styles for results page */
-        .info-card h4 {
-            color: #1976d2;
-        }
-
-        .error-section {
-            text-align: center;
-            padding: 40px;
-            background: #ffebee;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-
-        .error-section h3 {
-            color: #d32f2f;
-            margin-bottom: 10px;
-        }
-
-        .food-name {
-            text-transform: capitalize;
-        }
-    </style>
 </body>
 
 </html>

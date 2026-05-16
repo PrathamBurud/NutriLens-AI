@@ -3,99 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Snap a picture of your food and let AI calculate the calories, protein, and macros instantly!">
-    <meta property="og:title" content="🍎 AI Nutrition App">
-    <meta property="og:description" content="Snap a picture of your food and let AI calculate your macros instantly! Built by me.">
-    <meta property="og:type" content="website">
-    <title>AI Nutrition Detection</title>
+    <meta name="description" content="AI-powered nutrition detection and tracking app.">
+    <title>NutriLens - AI Nutrition Detection</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>🍎 AI Nutrition Detection</h1>
-            <p style="font-size: 1.1em; color: #555;">Snap a picture of your meal, and our AI will instantly estimate your calories, protein, carbs, and fat! Give it a try 🚀</p>
+        <header class="app-header">
+            <h1>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                </svg>
+                NutriLens AI
+            </h1>
+            <p>Upload a photo of your meal and let our intelligent vision models estimate your exact calories and macronutrients instantly.</p>
         </header>
 
-        <div class="upload-section">
+        <div class="upload-card">
             <form id="uploadForm" enctype="multipart/form-data">
                 <div class="upload-area" id="uploadArea">
                     <input type="file" id="foodImage" name="food_image" accept="image/*" hidden>
                     
-                    <div class="upload-content">
-                        <div class="upload-icon">🍲</div>
-                        <h3 style="margin-bottom: 20px;">Drag & Drop Image Here</h3>
-                        
-                        <div class="upload-actions" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px;">
-                            <button type="button" id="browseBtn" style="padding: 10px 20px; background: #f0f0f0; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; font-weight: bold; color: #444; transition: 0.2s;">📁 Browse Files</button>
-                            <button type="button" id="cameraBtn" style="padding: 10px 20px; background: #eef2ff; border: 2px solid #a3b8ff; color: #4b6bfb; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s;">📸 Take Photo</button>
-                        </div>
-                        
-                        <small>Supported: JPG, PNG, JPEG (Max 16MB)</small>
+                    <svg class="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                    </svg>
+                    
+                    <h3>Drag & Drop your food photo here</h3>
+                    <p>Supported formats: JPG, PNG, WEBP (Max 16MB)</p>
+                    
+                    <div class="upload-actions">
+                        <button type="button" id="browseBtn" class="btn-outline">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                            </svg>
+                            Browse Files
+                        </button>
+                        <button type="button" id="cameraBtn" class="btn-outline">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                            </svg>
+                            Take Photo
+                        </button>
                     </div>
                 </div>
                 
-                <div style="margin-bottom: 25px; text-align: left;">
-                    <label for="foodHint" style="color: #444; font-weight: bold; margin-bottom: 8px; display: block; font-size: 0.95em;">What is this food? (Optional hint for 100% accuracy)</label>
-                    <input type="text" id="foodHint" name="food_hint" placeholder="e.g., Masala Rice, Indian Thali, Poha..." style="width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 10px; font-size: 1em; background: #fafafa; transition: border-color 0.3s; outline: none;">
+                <div class="hint-group">
+                    <label for="foodHint">Optional hint for maximum accuracy (e.g., "Masala Dosa with Chutney")</label>
+                    <input type="text" id="foodHint" name="food_hint" placeholder="What is this food?">
                 </div>
-                <button type="submit" class="analyze-btn" id="analyzeBtn" disabled>
-                    🔍 Analyze Nutrition
+                
+                <button type="submit" class="btn-primary" id="analyzeBtn" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 20px; height: 20px;">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                    Analyze Nutrition
                 </button>
             </form>
         </div>
 
-        <div id="previewSection" class="preview-section" style="display: none;">
-            <h3>Image Preview:</h3>
+        <div id="previewSection" style="display: none;">
             <div class="preview-container">
                 <img id="imagePreview" src="" alt="Food preview">
-                <button onclick="clearImage()" class="clear-btn">🗑️ Remove</button>
-            </div>
-        </div>
-
-        <!-- Camera Modal for WebRTC Desktop capture -->
-        <div id="cameraModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; flex-direction: column; align-items: center; justify-content: center;">
-            <div style="background: white; padding: 20px; border-radius: 15px; text-align: center; max-width: 90%; width: 500px;">
-                <h3 style="margin-bottom: 15px;">Take a Photo</h3>
-                <video id="cameraVideo" autoplay playsinline style="width: 100%; border-radius: 10px; background: black; margin-bottom: 15px;"></video>
-                <canvas id="cameraCanvas" style="display: none;"></canvas>
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button type="button" id="snapBtn" style="padding: 12px 25px; background: #4b6bfb; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold;">📸 Snap It!</button>
-                    <button type="button" id="closeCameraBtn" style="padding: 12px 25px; background: #ff4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: bold;">❌ Cancel</button>
-                </div>
+                <button onclick="clearImage()" class="clear-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Remove
+                </button>
             </div>
         </div>
 
         <div id="loading" class="loading" style="display: none;">
             <div class="spinner"></div>
-            <p>AI is analyzing your food...</p>
-            <p class="loading-sub">Detecting food items and calculating nutrition</p>
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">Analyzing Image</h3>
+            <p style="color: var(--text-secondary);">Detecting food items and calculating precise nutritional values...</p>
         </div>
 
-        <div class="features">
-            <h3>How It Works:</h3>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">📸</div>
-                    <h4>1. Upload Image</h4>
-                    <p>Take a photo or upload image of your food</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🤖</div>
-                    <h4>2. AI Detection</h4>
-                    <p>AI identifies food items using deep learning</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h4>3. Nutrition Analysis</h4>
-                    <p>Get detailed calories and nutrient information</p>
+        <div class="features-header">How NutriLens Works</div>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                </svg>
+                <h4>1. Snap or Upload</h4>
+                <p>Take a clear photo of your meal. The better the lighting, the more accurate the results.</p>
+            </div>
+            <div class="feature-card">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.438 4.438 0 002.946-2.946 4.493 4.493 0 004.306-1.758q-2.656 0-5.5-5.5z" />
+                </svg>
+                <h4>2. AI Vision Intelligence</h4>
+                <p>Our advanced AI identifies every ingredient and realistically estimates portion sizes.</p>
+            </div>
+            <div class="feature-card">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+                </svg>
+                <h4>3. Precision Data</h4>
+                <p>Receive a comprehensive breakdown of total calories, protein, carbs, and fats instantly.</p>
+            </div>
+        </div>
+
+        <!-- Camera Modal -->
+        <div id="cameraModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 1000; flex-direction: column; align-items: center; justify-content: center;">
+            <div style="background: var(--surface-color); padding: 32px; border-radius: var(--radius-xl); text-align: center; max-width: 90%; width: 500px; box-shadow: var(--shadow-lg);">
+                <h3 style="margin-bottom: 24px; font-weight: 600;">Take a Photo</h3>
+                <video id="cameraVideo" autoplay playsinline style="width: 100%; border-radius: var(--radius-lg); background: black; margin-bottom: 24px; box-shadow: var(--shadow-sm);"></video>
+                <canvas id="cameraCanvas" style="display: none;"></canvas>
+                <div style="display: flex; gap: 16px; justify-content: center;">
+                    <button type="button" id="snapBtn" class="btn-primary" style="flex: 1;">Snap Photo</button>
+                    <button type="button" id="closeCameraBtn" class="btn-outline" style="flex: 1; justify-content: center;">Cancel</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-<input type="hidden" name="MAX_FILE_SIZE" value="16777216">
+    <input type="hidden" name="MAX_FILE_SIZE" value="16777216">
 </body>
-
 </html>
