@@ -82,7 +82,7 @@ def analyze_food_image(image_path, food_hint=None):
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": "Analyze the food in this image."},
+                        {"type": "text", "text": "Analyze the food in this image. Remember to reply only with a valid JSON block containing the food items."},
                         {
                             "type": "image_url",
                             "image_url": {
@@ -92,25 +92,49 @@ def analyze_food_image(image_path, food_hint=None):
                     ],
                 }
             ],
-            model="meta-llama/llama-4-scout-17b-16e-instruct",
-            response_format={"type": "json_object"},
+            model="qwen/qwen3.6-27b",
             temperature=0.0,
-            seed=42
+            max_tokens=4096
         )
         
         # Clean up response text
         text = chat_completion.choices[0].message.content.strip()
         print(f"🤖 AI Raw Response Length: {len(text)} chars")
         
-        # Extract JSON
+        # Extract JSON robustly by removing <think> blocks and code blocks
+        import re
+        text_clean = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+        
+        parsed_json = None
+        # Try direct JSON loads
         try:
-            parsed_json = json.loads(text)
+            parsed_json = json.loads(text_clean)
+        except Exception:
+            # Try parsing from markdown block
+            match = re.search(r'```json\s*(.*?)\s*```', text_clean, re.DOTALL)
+            if match:
+                try:
+                    parsed_json = json.loads(match.group(1))
+                except Exception:
+                    pass
+            
+            if not parsed_json:
+                # Try finding raw curly braces
+                match = re.search(r'(\{.*\})', text_clean, re.DOTALL)
+                if match:
+                    try:
+                        parsed_json = json.loads(match.group(1))
+                    except Exception:
+                        pass
+        
+        if parsed_json:
             results = parsed_json.get("items", [])
             # Save to cache
             _IMAGE_CACHE[cache_key] = results
             return results
-        except Exception as e:
-            print(f"❌ AI did not return a valid JSON object: {e}")
+        else:
+            print("❌ AI did not return a valid JSON object")
+            print("Raw text response was:", text)
             return None
         
     except Exception as e:

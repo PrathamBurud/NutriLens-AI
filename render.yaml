@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: nutrition-detection-app
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.9
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
