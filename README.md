@@ -2,6 +2,8 @@
 
 ### AI-Powered Food Nutrition & Dietary Health Analyzer
 
+> 🌐 **Live Demo Application**: [https://prathamburud.pythonanywhere.com](https://prathamburud.pythonanywhere.com)
+
 NutriLens AI is an intelligent computer vision web application designed to identify meal components from images and calculate detailed nutritional values, including Calories, Macronutrients, Dietary Fiber, and Calorie Distribution percentages.
 
 ---
