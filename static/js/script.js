@@ -10,6 +10,28 @@ document.addEventListener('DOMContentLoaded', function () {
     const browseBtn = document.getElementById('browseBtn');
     const cameraBtn = document.getElementById('cameraBtn');
 
+    // Create Toast Element
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="#EF4444" style="width: 20px; height: 20px; flex-shrink: 0;">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+        </svg>
+        <span id="toastMessage"></span>
+    `;
+    document.body.appendChild(toast);
+
+    let toastTimeout = null;
+    function showToast(message) {
+        const toastMsg = document.getElementById('toastMessage');
+        toastMsg.textContent = message;
+        toast.classList.add('show');
+        if (toastTimeout) clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 5000);
+    }
+
     // Click on browse button
     browseBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -42,7 +64,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 cameraModal.style.display = 'flex';
             } catch (err) {
                 console.error("Camera access denied or unavailable", err);
-                alert("Could not access your camera. Make sure your browser has permission.");
+                showToast("Could not access your camera. Make sure your browser has camera permission.");
             }
         }
     });
@@ -126,7 +148,10 @@ document.addEventListener('DOMContentLoaded', function () {
     uploadForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        if (!fileInput.files[0]) return;
+        if (!fileInput.files[0]) {
+            showToast('Please select or capture a food photo first.');
+            return;
+        }
 
         loading.style.display = 'block';
         analyzeBtn.disabled = true;
@@ -139,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
         })
             .then(async response => {
                 if (!response.ok) {
-                    let errorMessage = 'Network response was not ok';
+                    let errorMessage = 'Unable to analyze image. Please try again.';
                     try {
                         const errData = await response.json();
                         if (errData.error) {
@@ -157,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert(error.message);
+                showToast(error.message || 'Unable to process image. Please try again.');
                 loading.style.display = 'none';
                 analyzeBtn.disabled = false;
             });

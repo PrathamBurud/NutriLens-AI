@@ -1,6 +1,9 @@
 venv/
+venv*/
 .env
 __pycache__/
 *.pyc
+*.log
+node_modules/
 static/uploads/*
 !static/uploads/.gitkeep
