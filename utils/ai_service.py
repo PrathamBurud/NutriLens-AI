@@ -1,14 +1,13 @@
 """
 =============================================================================
-NutriLens AI - AI Vision & Nutrition Service (Dual Provider: Gemini + Groq)
+NutriLens AI - AI Vision & Nutrition Estimation Service
 =============================================================================
 This module handles:
-1. Google Gemini 2.5 Flash Vision REST API (Primary Engine).
-2. Groq Vision AI (Automatic Fallback Engine).
-3. Clinical Dietitian Prompting for high nutritional & macronutrient accuracy.
-4. Complete Macro Extraction: Calories, Protein, Fat, Carbs, Dietary Fiber, and Health Insights.
-5. In-memory caching for zero latency on duplicate scans.
-6. Safe Error Masking: Catches technical errors internally so raw API codes are never shown to the user.
+1. Multimodal neural vision processing for meal images.
+2. Clinical Dietitian prompting for high macronutrient and micronutrient accuracy.
+3. Complete Macro Extraction: Calories, Protein, Fat, Carbs, Dietary Fiber, and Health Insights.
+4. In-memory caching for zero latency on duplicate scans.
+5. Safe Error Masking: Ensures clean, professional output with zero raw technical leakage.
 =============================================================================
 """
 
@@ -36,7 +35,7 @@ _IMAGE_CACHE = {}
 
 def get_groq_client():
     """
-    Initializes and returns the Groq API client if key is present.
+    Initializes and returns the AI client if key is present.
     """
     load_dotenv(override=True)
     api_key = os.getenv('GROQ_API_KEY')
@@ -47,7 +46,7 @@ def get_groq_client():
 
 def optimize_and_encode_image(image_path, max_dimension=384):
     """
-    Resizes and compresses the image to optimize network transfer and speed.
+    Resizes and compresses the image to optimize processing speed and performance.
     Returns: (raw_bytes, base64_string, mime_type)
     """
     try:
@@ -62,8 +61,7 @@ def optimize_and_encode_image(image_path, max_dimension=384):
             image_bytes = buffer.getvalue()
             base64_string = base64.b64encode(image_bytes).decode('utf-8')
             return image_bytes, base64_string, "image/jpeg"
-    except Exception as e:
-        print(f"⚠️ Image compression note ({e}), using direct read.")
+    except Exception:
         with open(image_path, "rb") as f:
             raw_bytes = f.read()
             return raw_bytes, base64.b64encode(raw_bytes).decode('utf-8'), "image/jpeg"
@@ -179,16 +177,15 @@ def parse_nutrition_json(raw_text):
     return None
 
 
-def analyze_with_gemini(base64_image, mime_type, food_hint=None):
+def _run_primary_engine(base64_image, mime_type, food_hint=None):
     """
-    Analyzes food image using Google Gemini Vision API.
+    Primary neural vision execution pipeline.
     """
     load_dotenv(override=True)
     api_key = os.getenv('GOOGLE_API_KEY')
     if not api_key or api_key == "your_google_api_key_here":
-        return None, "Google API Key is not configured."
+        return None
 
-    print("🌐 Trying Google Gemini 2.5 Flash Vision API...")
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
     system_prompt = build_dietitian_prompt(food_hint)
 
@@ -219,26 +216,21 @@ def analyze_with_gemini(base64_image, mime_type, food_hint=None):
             raw_text = res_json['candidates'][0]['content']['parts'][0]['text']
             parsed_data = parse_nutrition_json(raw_text)
             if parsed_data and "items" in parsed_data:
-                return parsed_data, None
-        else:
-            print(f"⚠️ Gemini status {response.status_code}: {response.text[:150]}")
-            return None, "Gemini service temporarily unavailable."
-    except Exception as e:
-        print(f"⚠️ Gemini request note: {e}")
-        return None, "Gemini request timed out."
+                return parsed_data
+    except Exception:
+        pass
 
-    return None, "Unable to parse Gemini output."
+    return None
 
 
-def analyze_with_groq(base64_image, food_hint=None):
+def _run_secondary_engine(base64_image, food_hint=None):
     """
-    Analyzes food image using Groq Vision API.
+    Secondary neural vision execution pipeline.
     """
     client = get_groq_client()
     if not client:
-        return None, "Groq API key is not configured."
+        return None
 
-    print("⚡ Trying Groq Vision API...")
     system_prompt = build_dietitian_prompt(food_hint)
 
     try:
@@ -268,50 +260,48 @@ def analyze_with_groq(base64_image, food_hint=None):
         raw_output = response.choices[0].message.content.strip()
         parsed_data = parse_nutrition_json(raw_output)
         if parsed_data and "items" in parsed_data:
-            return parsed_data, None
-        return None, "Could not parse food items from image."
+            return parsed_data
+    except Exception:
+        pass
 
-    except Exception as e:
-        print(f"⚠️ Groq note: {e}")
-        return None, "Groq service temporarily busy."
+    return None
 
 
 def analyze_food_image(image_path, food_hint=None):
     """
-    Main orchestrator: Tries Google Gemini first (primary high-speed engine), 
-    and automatically falls back to Groq Vision AI.
+    Main orchestrator: Executes AI Vision Nutrition Analysis with automated failover.
     
     Returns:
         tuple: (data_dict, user_friendly_error_message)
     """
-    print(f"\n🤖 AI Service: Analyzing image: {image_path}")
+    print(f"🤖 NutriLens Vision: Processing image...")
 
     # 1. Compress and encode image
     image_bytes, base64_image, mime_type = optimize_and_encode_image(image_path, max_dimension=384)
 
-    # 2. Check in-memory cache to save API calls
+    # 2. Check in-memory cache to save compute
     cache_key = hashlib.md5(image_bytes).hexdigest()
     if food_hint:
         cache_key += f"_{food_hint.strip().lower()}"
 
     if cache_key in _IMAGE_CACHE:
-        print("⚡ Cache Hit: Returning cached nutrition data.")
+        print("⚡ Returning cached nutrition analysis.")
         return _IMAGE_CACHE[cache_key], None
 
-    # 3. Provider 1: Try Google Gemini 2.5 Flash Vision
-    gemini_data, gemini_err = analyze_with_gemini(base64_image, mime_type, food_hint)
-    if gemini_data and "items" in gemini_data and len(gemini_data["items"]) > 0:
-        _IMAGE_CACHE[cache_key] = gemini_data
-        print(f"✅ [Google Gemini] Successfully detected {len(gemini_data['items'])} food item(s).")
-        return gemini_data, None
+    # 3. Pipeline 1: Primary Vision Analysis
+    primary_data = _run_primary_engine(base64_image, mime_type, food_hint)
+    if primary_data and "items" in primary_data and len(primary_data["items"]) > 0:
+        _IMAGE_CACHE[cache_key] = primary_data
+        print(f"✅ Successfully identified {len(primary_data['items'])} food item(s).")
+        return primary_data, None
 
-    # 4. Provider 2: Automatic Fallback to Groq Vision AI
-    groq_data, groq_err = analyze_with_groq(base64_image, food_hint)
-    if groq_data and "items" in groq_data and len(groq_data["items"]) > 0:
-        _IMAGE_CACHE[cache_key] = groq_data
-        print(f"✅ [Groq Vision] Successfully detected {len(groq_data['items'])} food item(s).")
-        return groq_data, None
+    # 4. Pipeline 2: Secondary Vision Analysis (Failover)
+    secondary_data = _run_secondary_engine(base64_image, food_hint)
+    if secondary_data and "items" in secondary_data and len(secondary_data["items"]) > 0:
+        _IMAGE_CACHE[cache_key] = secondary_data
+        print(f"✅ Successfully identified {len(secondary_data['items'])} food item(s).")
+        return secondary_data, None
 
-    # 5. Polite, user-safe error message (never leaks API keys, 429, or technical jargon)
-    print(f"⚠️ Both providers could not complete scan: Gemini ({gemini_err}) | Groq ({groq_err})")
+    # 5. Safe, clean fallback message
+    print("⚠️ Unable to identify food components from image.")
     return None, "Unable to analyze food in this photo. Please ensure the image is clear and well-lit, or add a food hint."

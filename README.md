@@ -7,7 +7,7 @@ NutriLens AI is an intelligent computer vision application that analyzes meal im
 ## ✨ Key Features
 
 - 📸 **Multi-Modal Meal Input**: Supports instant drag-and-drop file upload or live camera capture via WebRTC.
-- ⚡ **Dual AI Vision Engine**: Powered by **Google Gemini 2.5 Flash Vision** with automatic failover to **Groq Vision AI (`qwen/qwen3.6-27b`)** for 100% uptime and high accuracy.
+- ⚡ **High-Precision Neural Vision Engine**: Powered by advanced multimodal vision models with automated fallback pipelines for 100% reliability and accurate food component detection.
 - 🔬 **Comprehensive Macro Breakdown**:
   - **Total Calories (kcal)**
   - **Protein (g)**
@@ -17,17 +17,17 @@ NutriLens AI is an intelligent computer vision application that analyzes meal im
 - 📊 **Physiological Calorie Distribution**: Dynamic macro percentage visualization based on Atwater physiological energy factors ($4\text{ kcal/g for Protein \& Carbs, } 9\text{ kcal/g for Fats}$).
 - 🥗 **Dietitian Verdict & Health Guidance**: Automatically generates dietary tags and actionable nutritional advice tailored to the scanned meal.
 - 🖨️ **Export & Print**: One-click nutrition summary report generation.
-- 🛡️ **Fault-Tolerant & Safe**: In-memory caching, client-side image compression, and graceful error handling.
+- 🛡️ **Fault-Tolerant Architecture**: Client-side image optimization, in-memory caching, and resilient error recovery.
 
 ---
 
 ## 🛠️ Technology Stack
 
 - **Backend**: Python 3.10+, Flask
-- **AI Vision Models**: Google Gemini 2.5 Flash / Groq Vision (`qwen/qwen3.6-27b`)
+- **Vision Engine**: Multimodal Neural Vision Architecture
 - **Image Processing**: Pillow (PIL)
-- **Frontend**: Modern Vanilla HTML5, CSS3 (Glassmorphism & CSS Custom Properties), JavaScript (ES6+), WebRTC API
-- **Deployment**: Render / Railway ready (`Procfile`, `render.yaml`)
+- **Frontend**: Modern Vanilla HTML5, CSS3 (Glassmorphism & Custom Properties), JavaScript (ES6+), WebRTC API
+- **Deployment**: Production WSGI Ready (`Procfile`, `render.yaml`)
 
 ---
 
@@ -53,10 +53,9 @@ pip install -r requirements.txt
 ### 3. Configure Environment Variables
 Create a `.env` file in the root directory:
 ```ini
-GOOGLE_API_KEY=your_google_gemini_api_key_here
-GROQ_API_KEY=your_groq_api_key_here
+GOOGLE_API_KEY=your_primary_key_here
+GROQ_API_KEY=your_secondary_key_here
 ```
-> *Get a free Google Gemini key at [Google AI Studio](https://aistudio.google.com/app/apikey) and a free Groq key at [Groq Console](https://console.groq.com).*
 
 ### 4. Run the Application
 ```bash
@@ -72,7 +71,7 @@ Open your browser and navigate to `http://127.0.0.1:5000`.
 nutrition-detection-app/
 ├── app.py                # Flask controller, routing & macro calculations
 ├── utils/
-│   └── ai_service.py     # Dual-provider AI vision orchestrator & JSON parser
+│   └── ai_service.py     # Neural vision orchestrator & JSON parser
 ├── static/
 │   ├── css/style.css     # Design system & responsive styles
 │   ├── js/script.js      # Camera capture, drag-drop & toast notifications
